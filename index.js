@@ -20,7 +20,8 @@ import Pickr from '@simonwep/pickr';
 			onChange: '&',
 			onChangeStop: '&',
 			onCancel: '&',
-			onSwatchSelect: '&'
+			onSwatchSelect: '&',
+			onButtonClick: '&',
 		},
 		template: `<div class="color-picker"></div>`,
 		controller: NgPickerController,
@@ -35,31 +36,76 @@ import Pickr from '@simonwep/pickr';
 		const el = $($element[0].firstElementChild)[0];
 
 		let pickr = null;
+		let eventBindings = [];
 
-		vm.$onInit = () => {
-		};
+		vm.$onInit = angular.noop;
 
-		vm.$postLink = () => {
+		vm.$postLink = () => pickr = Pickr.create(buildSettings())
+			.on('init', instance => {
 
-			pickr = Pickr.create(buildSettings());
+				inlineHide();
 
-			pickr.on('save', hsva => {
-				updateModel(hsva);
-			});
+				instance.setColor(vm.ngModel || null);
 
-			if (vm.onChange && (typeof vm.onChange === 'function')) {
+				registerButtonOnClick(instance);
+				registerPreventEvents(instance);
 
-				pickr.on('change', hsva => $timeout(() => vm.onChange({
-					value: colorAsCurrentRepresentation(hsva),
-					hsva: hsva.toHSVA().toString(getPrecision()),
-					hsla: hsva.toHSLA().toString(getPrecision()),
-					rgba: hsva.toRGBA().toString(getPrecision()),
-					hexa: hsva.toHEXA().toString(getPrecision()),
-					cmyk: hsva.toCMYK().toString(getPrecision()),
-					source: hsva.clone()
-				})));
-			}
-		};
+				run(vm.onInit, {pickr: instance});
+
+			})
+			.on('hide', instance => {
+
+				inlineHide();
+
+				run(vm.onHide, {pickr: instance});
+
+			})
+			.on('show', instance => {
+
+				inlineShow();
+
+				run(vm.onShow, {pickr: instance});
+
+			})
+			.on('save', (color, instance) => {
+
+				updateModel(color);
+
+				run(vm.onSave, {
+					color: color && color.clone(),
+					pickr: instance
+				});
+
+			}).on('change', (color, instance) => {
+
+				run(vm.onChange, {
+					value: colorAsCurrentRepresentation(color),
+					hsva: color && color.toHSVA().toString(getPrecision()),
+					hsla: color && color.toHSLA().toString(getPrecision()),
+					rgba: color && color.toRGBA().toString(getPrecision()),
+					hexa: color && color.toHEXA().toString(getPrecision()),
+					cmyk: color && color.toCMYK().toString(getPrecision()),
+					color: color && color.clone(),
+					pickr: instance
+				});
+
+			}).on('changestop', instance => {
+
+				if (vm.settings && vm.settings.autoHide) {
+					instance.hide();
+				}
+
+				run(vm.onChangeStop, {pickr: instance});
+
+			}).on('cancel', instance => {
+
+				run(vm.onCancel, {pickr: instance});
+
+			})
+			.on('swatchselect', (color, instance) => run(vm.onChange, {
+				color: color && color.clone(),
+				pickr: instance
+			}));
 
 		vm.$onChanges = changes => {
 
@@ -80,9 +126,82 @@ import Pickr from '@simonwep/pickr';
 
 			if (!pickr) return;
 
+			clearEventBidings();
+
 			pickr.destroy();
 			pickr = null;
 		};
+
+		function run(f, arg) {
+			f && typeof f === 'function' && f(arg);
+		}
+
+		function registerButtonOnClick(instance) {
+
+			const button = instance && instance._root && instance._root.button;
+			button && addEventBinding(button, 'click', e => {
+
+				preventEventPropagation(e);
+
+				run(vm.onButtonClick, {$event: e, pickr: instance});
+			});
+		}
+
+		function inlineShow() {
+			vm.settings && vm.settings.inline && $(getPickrAppElement()).show();
+		}
+
+		function inlineHide() {
+			if (!vm.settings || !vm.settings.inline) return;
+			$(getPickrAppElement()).hide();
+		}
+
+		function addEventBinding(element, event, fun) {
+			$(element).on(event, fun);
+			eventBindings.push({element, event, fun});
+		}
+
+		function registerPreventEvents(instance) {
+
+			const root = instance && instance.getRoot();
+			if (!root) return;
+
+			const elements = [];
+
+			root.palette && root.palette.picker && elements.push(root.palette.picker);
+			root.palette && root.palette.palette && root.palette.palette.parentElement && elements.push(root.palette.palette.parentElement);
+			root.hue && root.hue.picker && elements.push(root.hue.picker);
+			root.hue && root.hue.slider && root.hue.slider.parentElement && elements.push(root.hue.slider.parentElement);
+			root.opacity && root.opacity.picker && elements.push(root.opacity.picker);
+			root.opacity && root.opacity.slider && root.opacity.slider.parentElement && elements.push(root.opacity.slider.parentElement);
+
+			elements.forEach(element => addEventBinding(element, 'click', e => preventEventPropagation(e)));
+		}
+
+		function clearEventBidings() {
+
+			try {
+
+				eventBindings.forEach(e => $(e.element).off(e.event, e.fun));
+				eventBindings = [];
+
+			} catch (e) {
+				$log.error(e);
+			}
+		}
+
+		function preventEventPropagation(event) {
+
+			if (!event || !vm.settings || !vm.settings.preventEvent) return;
+
+			event.preventDefault && event.preventDefault();
+			event.stopPropagation && event.stopPropagation();
+			event.stopImmediatePropagation && event.stopImmediatePropagation();
+		}
+
+		function getPickrAppElement() {
+			return $element[0].querySelector('.pcr-app');
+		}
 
 		function allColorsFormats(hsva) {
 			return !hsva ? null : [
