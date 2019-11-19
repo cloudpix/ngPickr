@@ -71,25 +71,10 @@ import Pickr from '@simonwep/pickr';
 
 				updateModel(color);
 
-				run(vm.onSave, {
-					color: color && color.clone(),
-					pickr: instance
-				});
+				run(vm.onSave, buildColorsObject(color, instance));
 
-			}).on('change', (color, instance) => {
-
-				run(vm.onChange, {
-					value: colorAsCurrentRepresentation(color),
-					hsva: color && color.toHSVA().toString(getPrecision()),
-					hsla: color && color.toHSLA().toString(getPrecision()),
-					rgba: color && color.toRGBA().toString(getPrecision()),
-					hexa: color && color.toHEXA().toString(getPrecision()),
-					cmyk: color && color.toCMYK().toString(getPrecision()),
-					color: color && color.clone(),
-					pickr: instance
-				});
-
-			}).on('changestop', instance => {
+			}).on('change', (color, instance) => run(vm.onChange, buildColorsObject(color, instance)))
+			.on('changestop', instance => {
 
 				if (vm.settings && vm.settings.autoHide) {
 					instance.hide();
@@ -97,15 +82,8 @@ import Pickr from '@simonwep/pickr';
 
 				run(vm.onChangeStop, {pickr: instance});
 
-			}).on('cancel', instance => {
-
-				run(vm.onCancel, {pickr: instance});
-
-			})
-			.on('swatchselect', (color, instance) => run(vm.onChange, {
-				color: color && color.clone(),
-				pickr: instance
-			}));
+			}).on('cancel', instance => run(vm.onCancel, {pickr: instance}))
+			.on('swatchselect', (color, instance) => run(vm.onChange, buildColorsObject(color, instance)));
 
 		vm.$onChanges = changes => {
 
@@ -201,6 +179,20 @@ import Pickr from '@simonwep/pickr';
 
 		function getPickrAppElement() {
 			return $element[0].querySelector('.pcr-app');
+		}
+
+		function buildColorsObject(color, instance) {
+			return {
+				value: colorAsCurrentRepresentation(color),
+				hsva: color && color.toHSVA().toString(getPrecision()),
+				hsla: color && color.toHSLA().toString(getPrecision()),
+				rgba: color && color.toRGBA().toString(getPrecision()),
+				hexa: color && color.toHEXA().toString(getPrecision()),
+				cmyk: color && color.toCMYK().toString(getPrecision()),
+				color: color && color.clone(),
+				opacity: color && color.toRGBA()[3],
+				pickr: instance
+			};
 		}
 
 		function allColorsFormats(hsva) {
