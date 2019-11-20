@@ -251,7 +251,7 @@ import Pickr from '@simonwep/pickr';
 			const options = vm.settings || {};
 			return {
 				el: el,
-				theme: options.theme || 'nano', //classic | monolithf
+				theme: options.theme || 'nano', //classic | monolith
 				inline: options.hasOwnProperty('inline') ? options.inline : false,
 				autoReposition: options.hasOwnProperty('autoReposition') ? options.autoReposition : true,
 				disabled: vm.ngDisabled !== undefined ? vm.ngDisabled : false,
@@ -289,4 +289,3 @@ import Pickr from '@simonwep/pickr';
 
 	}
 })();
-f
