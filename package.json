@@ -1,6 +1,6 @@
 {
   "name": "ngPickr",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AngularJS wrapper for Pickr",
   "main": "index.js",
   "repository": "git@github.com:cloudpix/ngPickr.git",

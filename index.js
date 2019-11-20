@@ -45,7 +45,7 @@ import Pickr from '@simonwep/pickr';
 
 				inlineHide();
 
-				instance.setColor(vm.ngModel || null);
+				instance.setColor(vm.ngModel || (vm.settings && vm.settings.initialColor) || null, true);
 
 				registerButtonOnClick(instance);
 				registerPreventEvents(instance);
@@ -231,7 +231,7 @@ import Pickr from '@simonwep/pickr';
 			const pickrColor = allColorsFormats(pickr.getColor());
 
 			if (pickrColor && pickrColor.length && !pickrColor.find(c => c === vm.ngModel)) {
-				pickr.setColor(vm.ngModel);
+				pickr.setColor(vm.ngModel, true);
 			}
 		}
 
@@ -251,7 +251,7 @@ import Pickr from '@simonwep/pickr';
 			const options = vm.settings || {};
 			return {
 				el: el,
-				theme: options.theme || 'nano', //classic | monolith
+				theme: options.theme || 'nano', //classic | monolithf
 				inline: options.hasOwnProperty('inline') ? options.inline : false,
 				autoReposition: options.hasOwnProperty('autoReposition') ? options.autoReposition : true,
 				disabled: vm.ngDisabled !== undefined ? vm.ngDisabled : false,
@@ -289,3 +289,4 @@ import Pickr from '@simonwep/pickr';
 
 	}
 })();
+f
