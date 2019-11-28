@@ -104,7 +104,7 @@ import Pickr from '@simonwep/pickr';
 
 			if (!pickr) return;
 
-			clearEventBidings();
+			clearEventBindings();
 
 			pickr.destroy();
 			pickr = null;
@@ -156,7 +156,7 @@ import Pickr from '@simonwep/pickr';
 			elements.forEach(element => addEventBinding(element, 'click', e => preventEventPropagation(e)));
 		}
 
-		function clearEventBidings() {
+		function clearEventBindings() {
 
 			try {
 
