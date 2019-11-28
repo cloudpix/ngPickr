@@ -33,7 +33,7 @@ import Pickr from '@simonwep/pickr';
 	function NgPickerController($timeout, $element, $log) {
 
 		const vm = this;
-		const el = $($element[0].firstElementChild)[0];
+		const el = $element[0].firstElementChild;
 
 		let pickr = null;
 		let eventBindings = [];
@@ -126,16 +126,17 @@ import Pickr from '@simonwep/pickr';
 		}
 
 		function inlineShow() {
-			vm.settings && vm.settings.inline && $(getPickrAppElement()).show();
+			if (!vm.settings || !vm.settings.inline) return;
+			getPickrAppElement().style.display = null;
 		}
 
 		function inlineHide() {
 			if (!vm.settings || !vm.settings.inline) return;
-			$(getPickrAppElement()).hide();
+			getPickrAppElement().style.display = 'none';
 		}
 
 		function addEventBinding(element, event, fun) {
-			$(element).on(event, fun);
+			element.addEventListener(event, fun);
 			eventBindings.push({element, event, fun});
 		}
 
@@ -160,7 +161,7 @@ import Pickr from '@simonwep/pickr';
 
 			try {
 
-				eventBindings.forEach(e => $(e.element).off(e.event, e.fun));
+				eventBindings.forEach(e => e.element.removeEventListener(e.event, e.fun));
 				eventBindings = [];
 
 			} catch (e) {
